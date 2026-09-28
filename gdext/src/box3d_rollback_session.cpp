@@ -144,6 +144,10 @@ void Box3DRollbackSession::ingest_packet(const PackedByteArray &packet) {
 	session.ingest_packet(packet.ptr(), (size_t)packet.size());
 }
 
+bool Box3DRollbackSession::ingest_packet_from(int expected_sender, const PackedByteArray &packet) {
+	return session.ingest_packet_from(expected_sender, packet.ptr(), (size_t)packet.size());
+}
+
 void Box3DRollbackSession::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_simulation", "simulation"), &Box3DRollbackSession::set_simulation);
 	ClassDB::bind_method(D_METHOD("configure", "local_player", "num_players", "input_delay", "max_prediction"),
@@ -152,6 +156,7 @@ void Box3DRollbackSession::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("tick", "local_input"), &Box3DRollbackSession::tick);
 	ClassDB::bind_method(D_METHOD("get_packet"), &Box3DRollbackSession::get_packet);
 	ClassDB::bind_method(D_METHOD("ingest_packet", "packet"), &Box3DRollbackSession::ingest_packet);
+	ClassDB::bind_method(D_METHOD("ingest_packet_from", "expected_sender", "packet"), &Box3DRollbackSession::ingest_packet_from);
 	ClassDB::bind_method(D_METHOD("get_current_frame"), &Box3DRollbackSession::get_current_frame);
 	ClassDB::bind_method(D_METHOD("get_confirmed_frame"), &Box3DRollbackSession::get_confirmed_frame);
 	ClassDB::bind_method(D_METHOD("get_safe_frame"), &Box3DRollbackSession::get_safe_frame);

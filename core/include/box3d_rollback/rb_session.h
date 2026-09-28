@@ -43,6 +43,11 @@ public:
 	bool tick(int64_t local_input);
 	std::vector<uint8_t> get_packet();
 	void ingest_packet(const uint8_t *data, size_t size);
+	// Checks the authenticated transport's expected slot against the packet's
+	// embedded sender before the legacy ingestion path can mutate state.
+	// True means the source/header binding passed, not that a stale packet
+	// contributed new input. The caller owns transport authentication.
+	bool ingest_packet_from(int expected_sender, const uint8_t *data, size_t size);
 
 	int64_t get_current_frame() const { return current_frame; }
 	int64_t get_confirmed_frame() const { return min_remote_confirmed(); }

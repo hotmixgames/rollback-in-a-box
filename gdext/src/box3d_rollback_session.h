@@ -69,6 +69,7 @@ public:
 	bool tick(int64_t local_input);
 	PackedByteArray get_packet();
 	void ingest_packet(const PackedByteArray &packet);
+	bool ingest_packet_from(int expected_sender, const PackedByteArray &packet);
 
 	int64_t get_current_frame() const { return session.get_current_frame(); }
 	int64_t get_confirmed_frame() const { return session.get_confirmed_frame(); }

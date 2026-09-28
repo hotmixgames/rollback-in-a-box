@@ -340,6 +340,19 @@ std::vector<uint8_t> RollbackSession::get_packet() {
 	return out;
 }
 
+bool RollbackSession::ingest_packet_from(int expected_sender, const uint8_t *data, size_t size) {
+	if (!active || expected_sender < 0 || expected_sender >= num_players || expected_sender == local_player ||
+		data == nullptr || size < HEADER_SIZE) {
+		return false;
+	}
+	if (read_le<uint32_t>(data, 0) != PACKET_MAGIC || read_le<uint8_t>(data, 4) != PACKET_VERSION ||
+		read_le<uint8_t>(data, 5) != expected_sender) {
+		return false;
+	}
+	ingest_packet(data, size);
+	return true;
+}
+
 void RollbackSession::ingest_packet(const uint8_t *data, size_t size) {
 	const int64_t psize = (int64_t)size;
 	if (!active || data == nullptr || psize < (int64_t)HEADER_SIZE) {

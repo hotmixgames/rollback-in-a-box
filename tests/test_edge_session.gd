@@ -474,6 +474,33 @@ func test_malformed_packets_ignored() -> void:
 	if not sa.tick(3):
 		return fail("malformed: tick failed after malformed packets")
 
+# Case: authenticated transport slot must match the packet's embedded sender.
+func test_source_aware_ingest() -> void:
+	var session := make_session(make_sim(3), 0, 3)
+	var from_one := build_packet(1, 3, 0, [11, 12])
+	var from_two := build_packet(2, 3, 0, [21, 22])
+	var before := snap(session)
+	var before_packet := session.get_packet()
+	for wrong_slot in [-1, 0, 2, 3]:
+		if session.ingest_packet_from(wrong_slot, from_one):
+			return fail("source-aware: accepted packet from wrong slot %d" % wrong_slot)
+		if snap(session) != before or session.get_packet() != before_packet:
+			return fail("source-aware: wrong slot %d mutated session" % wrong_slot)
+	if session.ingest_packet_from(1, from_two):
+		return fail("source-aware: accepted spoofed sender 2 as slot 1")
+	if session.ingest_packet_from(1, PackedByteArray()):
+		return fail("source-aware: accepted empty packet")
+	var wrong_magic := from_one.duplicate()
+	wrong_magic[0] = 0
+	if session.ingest_packet_from(1, wrong_magic):
+		return fail("source-aware: accepted bad packet header")
+	if snap(session) != before or session.get_packet() != before_packet:
+		return fail("source-aware: rejected packet mutated session")
+	if not session.ingest_packet_from(1, from_one) or not session.ingest_packet_from(2, from_two):
+		return fail("source-aware: rejected correctly attributed packets")
+	if session.get_confirmed_frame() != 1:
+		return fail("source-aware: confirmed frame did not advance for both peers")
+
 # Case: lifecycle_boundaries_tick_before_start_freed_sim_frame0
 func test_lifecycle_boundaries() -> void:
 	var sim := make_sim(2)
@@ -575,6 +602,7 @@ func _initialize() -> void:
 		["far future and horizon straddle", test_far_future_and_horizon_straddle],
 		["out of order gap", test_out_of_order_gap],
 		["malformed packets ignored", test_malformed_packets_ignored],
+		["source-aware ingest", test_source_aware_ingest],
 		["lifecycle boundaries", test_lifecycle_boundaries],
 		["deliberate desync", test_deliberate_desync],
 	]
